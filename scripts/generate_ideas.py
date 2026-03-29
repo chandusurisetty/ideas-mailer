@@ -9,6 +9,7 @@ import os
 import json
 import smtplib
 import datetime
+import html
 import urllib.request
 import urllib.error
 from email.mime.multipart import MIMEMultipart
@@ -41,17 +42,26 @@ Return ONLY a JSON array (no markdown, no explanation) with this exact shape:
     "name": "Project Name",
     "type": "Web App",
     "scale": "Mini",
+    "origin": "Innovative Project",
     "description": "2-3 sentences describing what it does and what makes it interesting.",
     "angle": "The innovative twist or improvement opportunity in one sentence.",
     "tech": "React, Node.js, MongoDB",
+    "resources": [
+      {"label": "GitHub", "url": "https://github.com/example/repo"},
+      {"label": "Reference", "url": "https://example.com"}
+    ],
     "difficulty": "Easy"
   }
 ]
 
 type must be one of: Web App, Android App, Browser Extension, Electronic
 scale must be one of: Mini, Major  (Mini = 1-3 day build, Major = multi-week build)
+origin must be one of: Innovative Project, Existing Project
 difficulty must be one of: Easy, Medium, Hard
 tech must be a short comma-separated list of the main languages, frameworks, or hardware (2-4 items max)
+resources should be an array of useful public links only when they actually exist; otherwise use an empty array
+for Innovative Project, use resources only if there are real references worth studying
+for Existing Project, include the most useful GitHub repo or related public links when available
 """
 
 
@@ -107,16 +117,20 @@ def build_html(ideas: list) -> str:
     }
     diff_color = {"Easy": "#16a34a", "Medium": "#b45309", "Hard": "#dc2626"}
     scale_color = {"Mini": "#0891b2", "Major": "#7c3aed"}
+    origin_color = {"Innovative Project": "#0f766e", "Existing Project": "#374151"}
 
     cards = ""
     for i, idea in enumerate(ideas, 1):
         t = idea.get("type", "")
         d = idea.get("difficulty", "")
         s = idea.get("scale", "")
+        origin = idea.get("origin", "")
         tech = idea.get("tech", "")
+        resources = idea.get("resources", [])
         tc = type_color.get(t, "#6b7280")
         dc = diff_color.get(d, "#6b7280")
         sc = scale_color.get(s, "#6b7280")
+        oc = origin_color.get(origin, "#475569")
         # Build individual tech tags
         tag_style = (
             'display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;'
@@ -124,27 +138,47 @@ def build_html(ideas: list) -> str:
             'background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;'
         )
         tech_tags = "".join(
-            f'<span style="{tag_style}">{tag.strip()}</span>'
+            f'<span style="{tag_style}">{html.escape(tag.strip())}</span>'
             for tag in tech.split(",") if tag.strip()
         )
+        if not isinstance(resources, list):
+            resources = []
+        resource_links = "".join(
+            f'<a href="{html.escape(str(item.get("url", "")), quote=True)}" '
+            'style="display:inline-block;margin:2px 8px 2px 0;color:#2563eb;'
+            'font-size:12px;text-decoration:none;">'
+            f'{html.escape(str(item.get("label", "Resource")))}</a>'
+            for item in resources
+            if isinstance(item, dict) and item.get("url")
+        )
+        resources_block = ""
+        if resource_links:
+            resources_block = f"""
+      <div style="margin:0 0 12px;font-size:12px;color:#475569;">
+        <span style="font-weight:600;color:#111827;">Helpful links:</span>
+        {resource_links}
+      </div>"""
         cards += f"""
     <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:14px;
                 box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:4px solid {tc};">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;
                   flex-wrap:wrap;gap:6px;margin-bottom:10px;">
-        <span style="font-size:16px;font-weight:700;color:#111;">{i}. {idea.get('name','')}</span>
+        <span style="font-size:16px;font-weight:700;color:#111;">{i}. {html.escape(str(idea.get('name','')))}</span>
       </div>
       <p style="margin:0 0 8px;color:#374151;line-height:1.65;font-size:14px;">
-        {idea.get('description','')}
+        {html.escape(str(idea.get('description','')))}
       </p>
       <p style="margin:0 0 12px;color:#6b7280;font-style:italic;font-size:13px;">
-        💡 {idea.get('angle','')}
+        💡 {html.escape(str(idea.get('angle','')))}
       </p>
+      {resources_block}
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
         <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
                      color:#fff;background:{tc};">{t}</span>
         <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
                      color:#fff;background:{sc};">{s} Project</span>
+        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+                     color:#fff;background:{oc};">{html.escape(origin)}</span>
         <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
                      color:#fff;background:{dc};">{d}</span>
         <span style="color:#cbd5e1;font-size:11px;">|</span>
@@ -181,7 +215,7 @@ def build_html(ideas: list) -> str:
         <li><code style="background:#312e81;padding:1px 6px;border-radius:4px;">tell me more about [Project Name]</code></li>
       </ul>
       <p style="margin:10px 0 0;font-size:11px;opacity:.55;">
-        Reply checker runs every 30 min · You can also send a new email to yourself with your request
+        Reply checker runs every 5 min · You can also send a new email with your request
       </p>
     </div>
 
@@ -214,7 +248,7 @@ def main() -> None:
     print(f"Parsed {len(ideas)} ideas.")
 
     # Use exactly one model request per daily run.
-  # Send all ideas returned by the model (even if count is above 15).
+    # Send all ideas returned by the model (even if count is above 15).
 
     html = build_html(ideas)
     send_email(SUBJECT, html)
