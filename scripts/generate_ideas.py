@@ -10,8 +10,10 @@ import json
 import smtplib
 import datetime
 import html
+import re
 import urllib.request
 import urllib.error
+import urllib.parse
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -62,6 +64,8 @@ tech must be a short comma-separated list of the main languages, frameworks, or 
 resources should be an array of useful public links only when they actually exist; otherwise use an empty array
 for Innovative Project, use resources only if there are real references worth studying
 for Existing Project, include the most useful GitHub repo or related public links when available
+never invent, guess, or synthesize URLs
+if you are not confident a link exists, return an empty resources array
 """
 
 
@@ -104,6 +108,64 @@ def parse_ideas(raw: str) -> list:
     if start == -1 or end == 0:
         raise ValueError(f"No JSON array found in model output:\n{raw[:300]}")
     return json.loads(raw[start:end])
+
+
+def _looks_like_valid_public_url(url: str) -> bool:
+    if not url or not isinstance(url, str):
+        return False
+    parsed = urllib.parse.urlparse(url.strip())
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    if not parsed.netloc or "." not in parsed.netloc:
+        return False
+    if any(token in parsed.netloc.lower() for token in {"example.com", "localhost", "127.0.0.1"}):
+        return False
+    return True
+
+
+def _url_exists(url: str) -> bool:
+    if not _looks_like_valid_public_url(url):
+        return False
+
+    headers = {
+        "User-Agent": "ideas-mailer/1.0",
+        "Accept": "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
+    }
+
+    try:
+        request = urllib.request.Request(url, headers=headers, method="HEAD")
+        with urllib.request.urlopen(request, timeout=8) as response:
+            return 200 <= getattr(response, "status", 200) < 400
+    except Exception:
+        try:
+            request = urllib.request.Request(url, headers=headers, method="GET")
+            with urllib.request.urlopen(request, timeout=8) as response:
+                return 200 <= getattr(response, "status", 200) < 400
+        except Exception:
+            return False
+
+
+def normalize_resources(ideas: list) -> list:
+    for idea in ideas:
+        resources = idea.get("resources", [])
+        if not isinstance(resources, list):
+            idea["resources"] = []
+            continue
+
+        valid_resources = []
+        for item in resources:
+            if not isinstance(item, dict):
+                continue
+            label = str(item.get("label", "Resource")).strip()
+            url = str(item.get("url", "")).strip()
+            if not _url_exists(url):
+                continue
+            label = re.sub(r"\s+", " ", label)[:40] or "Resource"
+            valid_resources.append({"label": label, "url": url})
+
+        idea["resources"] = valid_resources[:3]
+
+    return ideas
 
 
 def build_html(ideas: list) -> str:
@@ -244,12 +306,11 @@ def send_email(subject: str, html_body: str) -> None:
 def main() -> None:
     print(f"Generating ideas for {TODAY} …")
     raw = call_github_models("Generate 15 diverse and interesting project ideas for today.")
-    ideas = parse_ideas(raw)
+    ideas = normalize_resources(parse_ideas(raw))
     print(f"Parsed {len(ideas)} ideas.")
 
     # Use exactly one model request per daily run.
     # Send all ideas returned by the model (even if count is above 15).
-
     html = build_html(ideas)
     send_email(SUBJECT, html)
 
