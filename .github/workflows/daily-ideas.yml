@@ -2,7 +2,7 @@ name: Daily Project Ideas
 
 on:
   schedule:
-    - cron: '30 2 * * *'   # 8:00 AM UTC = 1:30 PM IST
+    - cron: '30 2 * * *'   # 2:30 AM UTC = 8:00 AM IST
   workflow_dispatch:        # Manual trigger — use to test without waiting for schedule
 
 jobs:
