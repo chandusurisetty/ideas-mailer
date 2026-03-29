@@ -214,10 +214,7 @@ def main() -> None:
     print(f"Parsed {len(ideas)} ideas.")
 
     # Use exactly one model request per daily run.
-    # If the model returns fewer than 15, we send what we got.
-    if len(ideas) > 15:
-        ideas = ideas[:15]
-        print("Trimmed to 15 ideas.")
+  # Send all ideas returned by the model (even if count is above 15).
 
     html = build_html(ideas)
     send_email(SUBJECT, html)
