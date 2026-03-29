@@ -213,18 +213,11 @@ def main() -> None:
     ideas = parse_ideas(raw)
     print(f"Parsed {len(ideas)} ideas.")
 
-    # Top up to exactly 15 if the model returned fewer
-    if len(ideas) < 15:
-        needed = 15 - len(ideas)
-        print(f"Only {len(ideas)} ideas returned — fetching {needed} more …")
-        existing_names = ", ".join(i.get("name", "") for i in ideas)
-        top_up_raw = call_github_models(
-            f"Generate exactly {needed} more diverse project ideas. "
-            f"Do NOT repeat any of these already included: {existing_names}."
-        )
-        extra = parse_ideas(top_up_raw)
-        ideas = (ideas + extra)[:15]
-        print(f"Total after top-up: {len(ideas)} ideas.")
+    # Use exactly one model request per daily run.
+    # If the model returns fewer than 15, we send what we got.
+    if len(ideas) > 15:
+        ideas = ideas[:15]
+        print("Trimmed to 15 ideas.")
 
     html = build_html(ideas)
     send_email(SUBJECT, html)
