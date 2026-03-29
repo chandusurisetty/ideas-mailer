@@ -42,12 +42,14 @@ Return ONLY a JSON array (no markdown, no explanation) with this exact shape:
     "type": "Web App",
     "description": "2-3 sentences describing what it does and what makes it interesting.",
     "angle": "The innovative twist or improvement opportunity in one sentence.",
+    "tech": "React, Node.js, MongoDB",
     "difficulty": "Easy"
   }
 ]
 
 type must be one of: Web App, Android App, Browser Extension, Electronic, Mini Project, Major Project
 difficulty must be one of: Easy, Medium, Hard
+tech must be a short comma-separated list of the main languages, frameworks, or hardware (2-4 items max)
 """
 
 
@@ -107,25 +109,40 @@ def build_html(ideas: list) -> str:
     for i, idea in enumerate(ideas, 1):
         t = idea.get("type", "")
         d = idea.get("difficulty", "")
+        tech = idea.get("tech", "")
         tc = type_color.get(t, "#6b7280")
         dc = diff_color.get(d, "#6b7280")
+        # Build individual tech tags
+        tag_style = (
+            'display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;'
+            'border-radius:10px;font-size:11px;font-weight:500;'
+            'background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;'
+        )
+        tech_tags = "".join(
+            f'<span style="{tag_style}">{tag.strip()}</span>'
+            for tag in tech.split(",") if tag.strip()
+        )
         cards += f"""
     <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:14px;
                 box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:4px solid {tc};">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;
                   flex-wrap:wrap;gap:6px;margin-bottom:10px;">
         <span style="font-size:16px;font-weight:700;color:#111;">{i}. {idea.get('name','')}</span>
-        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
-                     color:#fff;background:{tc};">{t}</span>
       </div>
       <p style="margin:0 0 8px;color:#374151;line-height:1.65;font-size:14px;">
         {idea.get('description','')}
       </p>
-      <p style="margin:0 0 10px;color:#6b7280;font-style:italic;font-size:13px;">
+      <p style="margin:0 0 12px;color:#6b7280;font-style:italic;font-size:13px;">
         💡 {idea.get('angle','')}
       </p>
-      <span style="padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;
-                   color:#fff;background:{dc};">{d}</span>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+                     color:#fff;background:{tc};">{t}</span>
+        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+                     color:#fff;background:{dc};">{d}</span>
+        <span style="color:#cbd5e1;font-size:11px;">|</span>
+        {tech_tags}
+      </div>
     </div>"""
 
     return f"""<!DOCTYPE html>
