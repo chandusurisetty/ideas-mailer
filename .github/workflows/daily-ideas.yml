@@ -1,0 +1,26 @@
+name: Daily Project Ideas
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # 8:00 AM UTC = 1:30 PM IST
+  workflow_dispatch:        # Manual trigger — use to test without waiting for schedule
+
+jobs:
+  send-ideas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate and send 15 project ideas
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/generate_ideas.py
