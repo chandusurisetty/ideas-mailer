@@ -40,6 +40,7 @@ Return ONLY a JSON array (no markdown, no explanation) with this exact shape:
   {
     "name": "Project Name",
     "type": "Web App",
+    "scale": "Mini",
     "description": "2-3 sentences describing what it does and what makes it interesting.",
     "angle": "The innovative twist or improvement opportunity in one sentence.",
     "tech": "React, Node.js, MongoDB",
@@ -47,7 +48,8 @@ Return ONLY a JSON array (no markdown, no explanation) with this exact shape:
   }
 ]
 
-type must be one of: Web App, Android App, Browser Extension, Electronic, Mini Project, Major Project
+type must be one of: Web App, Android App, Browser Extension, Electronic
+scale must be one of: Mini, Major  (Mini = 1-3 day build, Major = multi-week build)
 difficulty must be one of: Easy, Medium, Hard
 tech must be a short comma-separated list of the main languages, frameworks, or hardware (2-4 items max)
 """
@@ -104,14 +106,17 @@ def build_html(ideas: list) -> str:
         "Major Project": "#7c3aed",
     }
     diff_color = {"Easy": "#16a34a", "Medium": "#b45309", "Hard": "#dc2626"}
+    scale_color = {"Mini": "#0891b2", "Major": "#7c3aed"}
 
     cards = ""
     for i, idea in enumerate(ideas, 1):
         t = idea.get("type", "")
         d = idea.get("difficulty", "")
+        s = idea.get("scale", "")
         tech = idea.get("tech", "")
         tc = type_color.get(t, "#6b7280")
         dc = diff_color.get(d, "#6b7280")
+        sc = scale_color.get(s, "#6b7280")
         # Build individual tech tags
         tag_style = (
             'display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;'
@@ -138,6 +143,8 @@ def build_html(ideas: list) -> str:
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
         <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
                      color:#fff;background:{tc};">{t}</span>
+        <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+                     color:#fff;background:{sc};">{s} Project</span>
         <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
                      color:#fff;background:{dc};">{d}</span>
         <span style="color:#cbd5e1;font-size:11px;">|</span>
