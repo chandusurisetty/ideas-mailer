@@ -1,126 +1,117 @@
-# Ideas Mailer — GitHub Actions
+# Ideas Mailer - GitHub Actions
 
-Sends a daily email of 15 project ideas using the GitHub Models API (free with your GitHub account).
-Replies to your emails with focused lists or project deep-dives — no server needed.
+AI-powered daily project ideas by email, plus email-based follow-up replies.
+No server, no database, no external hosting required.
 
----
+This project is designed to run well as a **public GitHub repository** so people can discover it and fork it quickly.
 
-## How it works
+## What It Does
 
-| Workflow | Schedule | What it does |
+- Sends a daily ideas email using GitHub Models.
+- Supports mixed idea types: Web App, Android App, Browser Extension, Electronic.
+- Includes project scale and difficulty tags in each card.
+- Reads inbound emails and sends AI follow-up replies automatically.
+
+## Workflows
+
+| Workflow | Schedule | Purpose |
 |---|---|---|
-| `daily-ideas.yml` | 8:00 AM UTC (1:30 PM IST) | Generates 15 project ideas via AI, sends HTML email |
-| `reply-checker.yml` | every 30 min | Reads your unread self-emails, generates contextual AI reply |
+| `daily-ideas.yml` | `0 8 * * *` (8:00 UTC) | Generate and send daily idea list |
+| `reply-checker.yml` | `*/5 * * * *` (every 5 min) | Check inbox and auto-reply to requests |
 
-All AI calls go to **GitHub Models API** — already included free with your GitHub account.
-Emails are sent and read via **Gmail App Password** — no OAuth setup needed.
+## Public Repo Note
 
----
+Keep this repository **Public** if you want maximum visibility and easier forking.
+Do not commit secrets. Keep credentials in GitHub Actions secrets only.
 
-## One-time setup
+## Quick Start
 
-### 1. Create a Gmail App Password
+### 1. Fork this repository
 
-You need a Gmail App Password (not your regular password) to let the workflow send and read email.
+1. Click **Fork** (top-right on GitHub).
+2. Keep your fork **Public** for discoverability.
+3. Open your fork settings and add required secrets.
 
-1. Go to [Google Account → Security → 2-Step Verification](https://myaccount.google.com/security) — enable it if not already on
-2. Go to [App Passwords](https://myaccount.google.com/apppasswords)
-3. Choose **Other (Custom name)** → type `ideas-mailer` → click **Generate**
-4. Copy the 16-character password shown — you'll add it as a secret next
+### 2. Add Actions secrets
 
-### 2. Create a GitHub repo and push this code
+Go to **Settings -> Secrets and variables -> Actions -> New repository secret**.
 
-```bash
-cd ideas-mailer
-git init
-git add .
-git commit -m "initial"
-git remote add origin https://github.com/YOUR_USERNAME/ideas-mailer.git
-git push -u origin main
-```
-
-### 3. Add repository secrets
-
-Go to your repo → **Settings → Secrets and variables → Actions → New repository secret**
-
-| Secret name | Value |
+| Secret | Value |
 |---|---|
-| `GMAIL_USER` | your Gmail address, e.g. `you@gmail.com` |
-| `GMAIL_APP_PASSWORD` | the 16-char App Password from step 1 |
+| `GMAIL_USER` | Bot Gmail sender account (example: `bot@gmail.com`) |
+| `GMAIL_APP_PASSWORD` | App Password from `GMAIL_USER` account |
+| `GMAIL_TO` | Recipient inbox (example: `you@gmail.com`) |
+| `MODELS_TOKEN` | GitHub PAT token with Models access |
 
-> `GITHUB_TOKEN` is provided automatically by GitHub Actions — do NOT add it manually.
+### 3. Trigger a test run
 
-### 4. Enable GitHub Models
+1. Open **Actions** tab.
+2. Run **Daily Project Ideas** workflow manually.
+3. Confirm email arrives.
 
-GitHub Models must be enabled on your account.
-Visit [github.com/marketplace/models](https://github.com/marketplace/models) and make sure you have access.
+### 4. Test reply flow
 
-### 5. Test immediately (without waiting for 8 AM)
+1. Send an email from `GMAIL_TO` to `GMAIL_USER`.
+2. Example text: `more web app ideas`.
+3. Reply checker runs every 5 minutes and responds.
 
-1. Go to your repo → **Actions** tab
-2. Click **Daily Project Ideas** in the left sidebar
-3. Click **Run workflow** → **Run workflow**
-4. Watch the run complete — email should arrive within 1–2 minutes
+## Example Requests You Can Send by Email
 
----
+- `more android ideas`
+- `more web app ideas`
+- `more extension ideas`
+- `more hardware ideas`
+- `mini project ideas for beginners`
+- `tell me more about <project name>`
+- `what tech stack for this idea?`
 
-## How to trigger the reply checker
+## SEO and Discoverability Tips (GitHub)
 
-Send an email **to yourself** (your Gmail to your Gmail) with any of these:
+To help people find and fork your project:
 
-```
-more android ideas
-more web ideas
-more hardware ideas
-more extension ideas
-mini projects only
-tell me more about [Project Name from the daily email]
-what tech stack would I use for a price tracker app?
-```
+1. Use this repository description in GitHub About:
+   `Daily AI project ideas by email using GitHub Actions, GitHub Models, and Gmail auto-replies.`
+2. Add repository topics:
+   `github-actions`, `ai`, `project-ideas`, `automation`, `email-automation`, `github-models`, `python`, `gmail`, `productivity`
+3. Keep README keywords near top:
+   `AI project ideas`, `GitHub Actions automation`, `daily email ideas`, `Gmail auto reply`, `GitHub Models`
+4. Keep the repo public and pin it on your profile.
 
-The reply-checker workflow runs every 30 minutes and will reply with AI-generated content.
+## Repository Structure
 
-> **Tip**: You can also reply directly to the daily ideas email — it works the same way.
-
----
-
-## Files
-
-```
+```text
 .github/
   workflows/
-    daily-ideas.yml       # Runs at 8 AM UTC daily
-    reply-checker.yml     # Runs every 30 minutes
+    daily-ideas.yml
+    reply-checker.yml
 scripts/
-  generate_ideas.py       # Generates 15 ideas + sends email
-  check_replies.py        # Reads inbox, classifies request, replies
+  generate_ideas.py
+  check_replies.py
 .gitignore
 README.md
 ```
 
-No `pip install` required — uses only Python standard library.
+## Schedule Customization
 
----
-
-## Customising the schedule
-
-Edit the `cron:` line in `daily-ideas.yml`:
+GitHub cron uses UTC.
 
 ```yaml
-- cron: '0 3 * * *'   # 3:00 AM UTC = 8:30 AM IST
-- cron: '30 2 * * *'  # 2:30 AM UTC = 8:00 AM IST
+# 8:00 AM IST
+- cron: '30 2 * * *'
+
+# 1:30 PM IST
+- cron: '0 8 * * *'
 ```
-
-Cron times in GitHub Actions are always **UTC**.
-[crontab.guru](https://crontab.guru) is useful for calculating your time zone offset.
-
----
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| Email not arriving | Check Actions tab for workflow errors; verify secrets are set correctly |
-| `535 Username and Password not accepted` | App Password was not saved correctly; regenerate it |
-| Reply checker not finding your email | Make sure Gmail IMAP is enabled: Gmail Settings → See all settings → Forwarding and POP/IMAP → Enable IMAP |
-| Ideas email lands in Spam | Mark it as "Not spam" once; Gmail will learn |
+| 401 Unauthorized from Models API | Verify `MODELS_TOKEN` is valid and active |
+| Gmail login failed | Recreate App Password for `GMAIL_USER` |
+| No reply emails | Confirm sender is `GMAIL_TO` and checker is enabled |
+| Messages in spam | Mark one message as Not spam and retry |
+
+## License
+
+Use any license you prefer (MIT recommended for easier forking).
