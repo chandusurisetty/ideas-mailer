@@ -2,7 +2,7 @@ name: Check Email Replies
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Every 30 minutes
+    - cron: '*/5 * * * *'  # Every 5 minutes
   workflow_dispatch:          # Manual trigger for testing
 
 jobs:
