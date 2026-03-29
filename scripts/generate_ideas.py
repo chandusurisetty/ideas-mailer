@@ -14,8 +14,9 @@ import urllib.error
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-GMAIL_USER = os.environ["GMAIL_USER"]
+GMAIL_USER = os.environ["GMAIL_USER"]          # bot sender: chandusurisetty11@gmail.com
 GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
+GMAIL_TO = os.environ["GMAIL_TO"]              # your inbox: chandusurisetty58@gmail.com
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 
 TODAY = datetime.date.today().strftime("%B %d, %Y")
@@ -170,7 +171,7 @@ def send_email(subject: str, html_body: str) -> None:
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = GMAIL_USER
-    msg["To"] = GMAIL_USER
+    msg["To"] = GMAIL_TO
     msg["X-Bot-Generated"] = "true"
     msg.attach(MIMEText(html_body, "html"))
 
@@ -178,7 +179,7 @@ def send_email(subject: str, html_body: str) -> None:
         server.ehlo()
         server.starttls()
         server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-        server.sendmail(GMAIL_USER, GMAIL_USER, msg.as_string())
+        server.sendmail(GMAIL_USER, GMAIL_TO, msg.as_string())
         print("Email sent.")
 
 
