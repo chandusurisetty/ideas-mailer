@@ -16,7 +16,7 @@ This project is designed to run well as a **public GitHub repository** so people
 
 | Workflow | Schedule | Purpose |
 |---|---|---|
-| `daily-ideas.yml` | `0 8 * * *` (8:00 UTC) | Generate and send daily idea list |
+| `daily-ideas.yml` | `30 2 * * *` (2:30 UTC) | Generate and send daily idea list |
 | `reply-checker.yml` | `*/5 * * * *` (every 5 min) | Check inbox and auto-reply to requests |
 
 ## Public Repo Note
