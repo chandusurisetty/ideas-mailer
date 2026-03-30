@@ -217,7 +217,7 @@ def build_reply_html(ai_response: str, request_preview: str) -> str:
     </div>
 
     <p style="text-align:center;color:#9ca3af;font-size:12px;margin-top:16px;">
-      Reply again to ask a follow-up &nbsp;·&nbsp; Checker runs every 30 min
+      Reply again to ask a follow-up &nbsp;·&nbsp; Checker runs every 5 min
     </p>
 
   </div>
